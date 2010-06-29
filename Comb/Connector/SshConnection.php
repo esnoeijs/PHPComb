@@ -1,6 +1,11 @@
 <?php
 class Comb_Connector_SshConnection
 {
+    const STATUS_READY      = 1;
+    const STATUS_BUSY       = 2;
+    const STATUS_SUCCESS    = 3;
+    const STATUS_ERROR      = 4;
+
     /**
      * The host we're connecting to
      * @var string
@@ -32,22 +37,34 @@ class Comb_Connector_SshConnection
     protected $resource;
 
     /**
-     * Boolean indicating if we're actually executing a command right now
-     * @var boolean
-     */
-    protected $executing = false;
-
-    /**
      * String containing the last response contents
      * @var string
      */
     protected $lastResponse = '';
 
     /**
-     * The stream
+     * The error we received from the remote server caused by the last request
+     * @var string
+     */
+    protected $lastResponseError = '';
+
+    /**
+     * The stdio stream
      * @var stream
      */
     protected $stream;
+
+    /**
+     * The stderr stream
+     * @var stream
+     */
+    protected $streamStdError;
+
+    /**
+     * The request status (see class constants)
+     * @var int the current request status
+     */
+    protected $requestStatus;
 
     /**
      * Creates a new SSH connection object
@@ -219,25 +236,79 @@ class Comb_Connector_SshConnection
      */
     public function exec($command)
     {
-        $this->executing = true;
+        if ($this->getLastRequestStatus() == self::STATUS_BUSY) {
+            Comb_Registry::get('logger')->warning('a command was executed on ' .
+                    $this->getHostname() . ' while the last command wasn\'t ' .
+                    'finnished yet. Waiting for the connection to clear before ' .
+                    'executing the next command...');
+
+            while($this->getLastRequestStatus() == self::STATUS_BUSY) {
+                sleep(1);
+            }
+        }
+
+        $this->requestStatus = self::STATUS_BUSY;
+        $this->lastResponse = '';
+        $this->lastResponseError = '';
         $this->stream = ssh2_exec($this->getResource(), $command);
+        $this->streamStdError = ssh2_fetch_stream($this->stream, SSH2_STREAM_STDERR);
     }
 
-    public function lastRequestFinnished()
+    /**
+     * Checks the various streams and sets the current request status based
+     * on this information
+     */
+    public function updateLastRequestStatus()
     {
-        if (false === $this->executing || !isset($this->stream)) {
-            return true;
+        $resp = stream_get_contents($this->stream);
+        if (!empty($resp)) {
+            $this->lastResponse .= $resp;
         }
 
-        $this->lastResponse .= stream_get_contents($this->stream);
+        $errorMessage = stream_get_contents($this->streamStdError);
+        if (!empty($errorMessage)) {
+            $this->_handleErrorStream($errorMessage);
+            return;
+            
+        }
 
-        if (true === $this->executing && feof($this->stream)) {
-            $this->executing = false;
+        if ($this->getLastRequestStatus() == self::STATUS_BUSY && feof($this->stream)) {
             Comb_Registry::get('logger')->info($this->getHostname() . ': Done');
             Comb_Registry::get('logger')->debug('Response: '. $this->lastResponse);
-            return true;
-        } else {
-            return false;
+            $this->requestStatus = self::STATUS_SUCCESS;
+            return;
         }
+
+        $this->requestStatus = self::STATUS_BUSY;
+    }
+
+    /**
+     * StdErr isn't empty, so we know something bad happened. Set the status
+     * to error and set the last errormessage so the user can figure out what
+     * went wrong.
+     * @param string $errorMessage the part of the errormessage we got so far.
+     *                             There might be some more so let's find out.
+     */
+    protected function _handleErrorStream($errorMessage)
+    {
+        $this->requestStatus = self::STATUS_ERROR;
+
+        while(!feof($this->streamStdError)) {
+            $errorMessage .= stream_get_contents($this->streamStdError);
+            usleep(10000);
+        }
+        $this->lastResponseError = $errorMessage;
+
+        Comb_Registry::get('logger')->error('on ' . $this->getHostname() . ' the ' .
+                'following error occurred: ' . $errorMessage);
+    }
+
+    /**
+     * Returns the status of the last request
+     * @return int the request status
+     */
+    public function getLastRequestStatus()
+    {
+        return $this->requestStatus;
     }
 }

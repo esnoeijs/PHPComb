@@ -27,12 +27,27 @@ class Comb_Connector_Ssh implements Comb_ConnectorInterface
         }
     }
 
+    /**
+     * Checks all the servers to see if they are done
+     * @param array $waitFor the servers to wait for
+     * @return boolean true if everything is done and we can continue, false if not
+     */
     protected function allDone(Array $waitFor=array())
     {
         $done = true;
-        foreach($waitFor as $server) {
-            if (false == $server->lastRequestFinnished()) {
-                $done = false;
+        foreach($waitFor as &$server) {
+            $server->updateLastRequestStatus();
+            $requestStatus = $server->getLastRequestStatus();
+            
+            if ($requestStatus == Comb_Connector_SshConnection::STATUS_SUCCESS ||
+                $requestStatus == Comb_Connector_SshConnection::STATUS_READY) {
+                unset($server);
+                continue;
+            }
+
+            if ($requestStatus == Comb_Connector_SshConnection::STATUS_ERROR) {
+                Comb_Registry::get('logger')->notice('To be implemented: rollback');
+                continue;
             }
         }
         return $done;
@@ -48,8 +63,8 @@ class Comb_Connector_Ssh implements Comb_ConnectorInterface
      */
     protected function getServersForServerLists(Array $serverLists)
     {
-        $obj = new Comb_Connector_SshConnection('www1', 'testuser', 'testpasswd');
-        $obj2 = new Comb_Connector_SshConnection('www2', 'testuser', 'testpasswd');
+        $obj = new Comb_Connector_SshConnection('webserver01', 'username', 'password');
+        $obj2 = new Comb_Connector_SshConnection('webserver02', 'username', 'password');
         return array($obj, $obj2);
     }
 }

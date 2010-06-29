@@ -2,7 +2,7 @@
 /**
  * Define constants that will be used throughout the application.
  */
-define('COMB_VERSION', 'alpha 0.1');
+define('COMB_VERSION', '0.0 (very very alpha)');
 define('COMB_APPLICATION_ROOT', dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR);
 define('COMB_PROJECT_ROOT', getcwd() . DIRECTORY_SEPARATOR);
 

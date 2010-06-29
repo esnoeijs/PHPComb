@@ -91,6 +91,10 @@ abstract class Comb_BaseTask
             return false;
         }
         Comb_Registry::get('logger')->info("Exec: '$command' [" . implode(', ', $serverLists) . ']');
+
+        $connector = $this->getConnector();
+        $connector->execCommand($command, $serverLists);
+
         return true;
     }
 

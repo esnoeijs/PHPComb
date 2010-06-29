@@ -32,6 +32,24 @@ class Comb_Connector_SshConnection
     protected $resource;
 
     /**
+     * Boolean indicating if we're actually executing a command right now
+     * @var boolean
+     */
+    protected $executing = false;
+
+    /**
+     * String containing the last response contents
+     * @var string
+     */
+    protected $lastResponse = '';
+
+    /**
+     * The stream
+     * @var stream
+     */
+    protected $stream;
+
+    /**
      * Creates a new SSH connection object
      * @param string $hostname the hostname of the SSH server
      * @param string $username the user we're using to connect with
@@ -201,7 +219,25 @@ class Comb_Connector_SshConnection
      */
     public function exec($command)
     {
-        ssh2_exec($this->getResource(), $command);
-        Comb_Registry::get('logger')->info($this->getHostname() . ': OK');
+        $this->executing = true;
+        $this->stream = ssh2_exec($this->getResource(), $command);
+    }
+
+    public function lastRequestFinnished()
+    {
+        if (false === $this->executing || !isset($this->stream)) {
+            return true;
+        }
+
+        $this->lastResponse .= stream_get_contents($this->stream);
+
+        if (true === $this->executing && feof($this->stream)) {
+            $this->executing = false;
+            Comb_Registry::get('logger')->info($this->getHostname() . ': Done');
+            Comb_Registry::get('logger')->debug('Response: '. $this->lastResponse);
+            return true;
+        } else {
+            return false;
+        }
     }
 }

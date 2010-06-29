@@ -5,7 +5,7 @@ class Comb_Task_Default extends Comb_BaseTask
 
     public function run()
     {
-        $this->exec('ls -la > /tmp/testje.txt');
+        $this->exec('sleep 1 && date');
     }
 
     public function undo()

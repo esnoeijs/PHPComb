@@ -9,6 +9,9 @@ class Comb_Connector_Ssh implements Comb_ConnectorInterface
     public function execCommand($command, Array $serverLists)
     {
         $servers = $this->getServersForServerLists($serverLists);
+
+        $waitFor = array();
+
         foreach($servers as $server) {
             if (false === $server->isConnected() && false === $server->connect()) {
                 Comb_Registry::get('logger')->warning('Skipping server');
@@ -16,8 +19,23 @@ class Comb_Connector_Ssh implements Comb_ConnectorInterface
             }
             
             $server->exec($command);
-            $server->disconnect();
+            $waitFor[] = $server;
         }
+
+        while(false === $this->allDone($waitFor)) {
+            usleep('100000');
+        }
+    }
+
+    protected function allDone(Array $waitFor=array())
+    {
+        $done = true;
+        foreach($waitFor as $server) {
+            if (false == $server->lastRequestFinnished()) {
+                $done = false;
+            }
+        }
+        return $done;
     }
 
     /**
@@ -30,8 +48,8 @@ class Comb_Connector_Ssh implements Comb_ConnectorInterface
      */
     protected function getServersForServerLists(Array $serverLists)
     {
-        $obj = new Comb_Connector_SshConnection('webserver01', 'username', 'password');
-        $obj2 = new Comb_Connector_SshConnection('webserver02', 'username', 'password');
+        $obj = new Comb_Connector_SshConnection('www1', 'testuser', 'testpasswd');
+        $obj2 = new Comb_Connector_SshConnection('www2', 'testuser', 'testpasswd');
         return array($obj, $obj2);
     }
 }

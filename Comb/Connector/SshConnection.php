@@ -179,7 +179,10 @@ class Comb_Connector_SshConnection
      */
     public function disconnect()
     {
-        ssh2_disconnect($this->getResource());
+        // the SSH2-extension doesn't support disconnecting before version 2.1.1
+        if (function_exists('ssh2_disconnect')) {
+            ssh2_disconnect($this->resource);
+        }
         unset($this->resource);
     }
 

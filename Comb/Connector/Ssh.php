@@ -14,7 +14,9 @@ class Comb_Connector_Ssh implements Comb_ConnectorInterface
                 Comb_Registry::get('logger')->warning('Skipping server');
                 continue;
             }
+            
             $server->exec($command);
+            $server->disconnect();
         }
     }
 
@@ -28,7 +30,8 @@ class Comb_Connector_Ssh implements Comb_ConnectorInterface
      */
     protected function getServersForServerLists(Array $serverLists)
     {
-        $obj = new Comb_Connector_SshConnection('localhost', 'username', 'password');
-        return array($obj);
+        $obj = new Comb_Connector_SshConnection('webserver01', 'username', 'password');
+        $obj2 = new Comb_Connector_SshConnection('webserver02', 'username', 'password');
+        return array($obj, $obj2);
     }
 }

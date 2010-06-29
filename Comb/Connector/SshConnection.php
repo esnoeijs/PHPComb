@@ -217,6 +217,8 @@ class Comb_Connector_SshConnection
         // the SSH2-extension doesn't support disconnecting before version 2.1.1
         if (function_exists('ssh2_disconnect')) {
             ssh2_disconnect($this->resource);
+        } else {
+            stream_socket_shutdown($this->resource, STREAM_SHUT_RDWR);
         }
         unset($this->resource);
     }

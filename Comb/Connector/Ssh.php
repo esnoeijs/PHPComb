@@ -32,16 +32,19 @@ class Comb_Connector_Ssh implements Comb_ConnectorInterface
      * @param array $waitFor the servers to wait for
      * @return boolean true if everything is done and we can continue, false if not
      */
-    protected function allDone(Array $waitFor=array())
+    protected function allDone(Array &$waitFor=array())
     {
         $done = true;
-        foreach($waitFor as &$server) {
+
+        for ($i=count($waitFor)-1; $i >= 0; $i--) {
+            $server = &$waitFor[$i];
             $server->updateLastRequestStatus();
             $requestStatus = $server->getLastRequestStatus();
             
             if ($requestStatus == Comb_Connector_SshConnection::STATUS_SUCCESS ||
                 $requestStatus == Comb_Connector_SshConnection::STATUS_READY) {
-                unset($server);
+                unset($waitFor[$i]);
+                sort($waitFor);
                 continue;
             }
 
@@ -50,7 +53,7 @@ class Comb_Connector_Ssh implements Comb_ConnectorInterface
                 continue;
             }
         }
-        return $done;
+        return (count($waitFor) == 0);
     }
 
     /**

@@ -241,12 +241,7 @@ class Comb_Connector_SshConnection
         if ($this->getLastRequestStatus() == self::STATUS_BUSY) {
             Comb_Registry::get('logger')->warning('a command was executed on ' .
                     $this->getHostname() . ' while the last command wasn\'t ' .
-                    'finnished yet. Waiting for the connection to clear before ' .
-                    'executing the next command...');
-
-            while($this->getLastRequestStatus() == self::STATUS_BUSY) {
-                sleep(1);
-            }
+                    'finnished yet');
         }
 
         $this->requestStatus = self::STATUS_BUSY;

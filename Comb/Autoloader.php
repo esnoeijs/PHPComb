@@ -27,7 +27,7 @@ class Comb_Autoloader
     protected static function loadCombClass($className)
     {
         $filepath = COMB_APPLICATION_ROOT . str_replace('_', DIRECTORY_SEPARATOR, $className) . '.php';
-        if (file_exists($filePath)) {
+        if (file_exists($filepath)) {
             require_once($filepath);
             return true;
         }

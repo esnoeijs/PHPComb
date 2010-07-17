@@ -34,8 +34,6 @@ class Comb_Connector_Ssh implements Comb_ConnectorInterface
      */
     protected function allDone(Array &$waitFor=array())
     {
-        $done = true;
-
         for ($i=count($waitFor)-1; $i >= 0; $i--) {
             $server = &$waitFor[$i];
             $server->updateLastRequestStatus();

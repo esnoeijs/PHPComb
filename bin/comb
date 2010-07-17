@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PHP_COMMAND="/usr/bin/php"
+PHP_COMMAND=`which php`
 export PHP_COMMAND
 
 if (test -z "$PHP_COMMAND") ; then

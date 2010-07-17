@@ -99,6 +99,17 @@ abstract class Comb_BaseTask
     }
 
     /**
+     * Run the command on our servers as sudo user
+     * @param string $command the command to run on the remote server(s)
+     * @return boolean true if successfull, false if not executed
+     */
+    public function sudo($command)
+    {
+        $command = 'sudo -p __SUDOPASSWORD__ ' . $command;
+        return $this->exec($command);
+    }
+
+    /**
      * Get the serverLists for this task. First, see if the task itself has
      * serverLists defined. If not, check if our creator has serverLists defined.
      * @return array containing serverlists to use, or null if none were found.

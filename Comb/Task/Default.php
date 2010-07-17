@@ -5,14 +5,12 @@ class Comb_Task_Default extends Comb_BaseTask
 
     public function run()
     {
-        $this->exec('ls -la > myfile.txt');
-        $this->exec('cat myfile.txt');
-        $this->exec('mv myfile.txt /root/');
-        $this->exec('date');
+        $this->sudo('touch myfile2.txt');
+        $this->exec('ls -lah myfile2.txt');
     }
 
     public function undo()
     {
-        $this->exec('rm /root/myfile.txt');
+        $this->exec('rm myfile2.txt');
     }
 }

@@ -63,8 +63,12 @@ class Comb_Connector_Ssh implements Comb_ConnectorInterface
      */
     protected function getServersForServerLists(Array $serverLists)
     {
-        $obj = new Comb_Connector_SshConnection('webserver01', 'username', 'password');
-        $obj2 = new Comb_Connector_SshConnection('webserver02', 'username', 'password');
-        return array($obj, $obj2);
+        static $testServers = array();
+        if (empty($testServers)) {
+            $obj = new Comb_Connector_SshConnection('server1', 'user', 'password');
+            $obj2 = new Comb_Connector_SshConnection('server2', 'user', 'password');
+            $testServers = array($obj, $obj2);            
+        }
+        return $testServers;
     }
 }

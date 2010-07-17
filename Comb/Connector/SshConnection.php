@@ -268,10 +268,12 @@ class Comb_Connector_SshConnection
         }
 
         $errorMessage = stream_get_contents($this->streamStdError);
-        if (!empty($errorMessage)) {
+
+        if ($this->interpretResponse($errorMessage)) {
+            Comb_Registry::get('logger')->debug('Response was interpreted and answered');
+        } elseif (!empty($errorMessage)) {
             $this->_handleErrorStream($errorMessage);
             return;
-            
         }
 
         if ($this->getLastRequestStatus() == self::STATUS_BUSY && feof($this->stream)) {
@@ -282,6 +284,25 @@ class Comb_Connector_SshConnection
         }
 
         $this->requestStatus = self::STATUS_BUSY;
+    }
+
+    /**
+     * Checks the response we received from the remote server and checks if we
+     * need to send anything back, for example when it's expecting a sudo-password
+     * @param string $responseString the response string so far
+     * @return boolean wether or not the response made any sense. If true is
+     *                 returned, this method has replied and no further action
+     *                 needs to be taken.
+     */
+    protected function interpretResponse($responseString)
+    {
+        if (strstr($responseString, '__SUDOPASSWORD__')) {
+            Comb_Registry::get('logger')->debug('Sending sudo password to ' . $this->getHostname());
+            $password = $this->getPassword();
+            fputs($this->stream, $password, strlen($password));
+            return true;
+        }
+        return false;
     }
 
     /**

@@ -68,7 +68,7 @@ class Comb_Connector_Ssh implements Comb_ConnectorInterface
         if (empty($testServers)) {
             $obj = new Comb_Connector_SshConnection('server1', 'user', 'password');
             $obj2 = new Comb_Connector_SshConnection('server2', 'user', 'password');
-            $testServers = array($obj, $obj2);            
+            $testServers = array($obj, $obj2);
         }
         return $testServers;
     }

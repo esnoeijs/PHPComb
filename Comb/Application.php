@@ -1,11 +1,15 @@
 <?php
 class Comb_Application
 {
+    /**
+     * Creates and initializes the application instance.
+     */
     public function __construct()
     {
         $this->setupLogger();
         $this->displayApplicationVersion();
         $this->checkDependencies();
+        $this->setupProjectConfig();
         $this->setupTaskRunner();
     }
 
@@ -18,16 +22,6 @@ class Comb_Application
         $logger = new Comb_Logger();
         $logger->setUseColors();
         Comb_Registry::set('logger', $logger);
-    }
-
-    /**
-     * Creates an instance of the Comb_TaskRunner and registers it in the
-     * registry
-     */
-    protected function setupTaskRunner()
-    {
-        $taskRunner = new Comb_TaskRunner();
-        Comb_Registry::set('taskrunner', $taskRunner);
     }
 
     /**
@@ -53,6 +47,26 @@ class Comb_Application
         } else {
             $logger->debug('SSH2 extension OK');
         }
+    }
+
+    /**
+     * Creates an instance of the Comb_ProjectConfig class and registers it in
+     * the registry
+     */
+    protected function setupProjectConfig()
+    {
+        $config = new Comb_ProjectConfig(COMB_PROJECT_ROOT . 'comb/comb.php');
+        Comb_Registry::set('projectconfig', $config);
+    }
+
+    /**
+     * Creates an instance of the Comb_TaskRunner and registers it in the
+     * registry
+     */
+    protected function setupTaskRunner()
+    {
+        $taskRunner = new Comb_TaskRunner();
+        Comb_Registry::set('taskrunner', $taskRunner);
     }
 
     /**

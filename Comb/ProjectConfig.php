@@ -125,6 +125,6 @@ class Comb_ProjectConfig
      * @return mixed|null the value from the configuration, or null if not found
      */
     public function __get($name) {
-        return $this->getConfigVar($key);
+        return $this->getConfigVar($name);
     }
 }

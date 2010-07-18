@@ -2,6 +2,38 @@
 class Comb_Connector_Ssh implements Comb_ConnectorInterface
 {
     /**
+     * Container containing the connection information loaded from the configuration
+     * @var Comb_Connector_SshConnectionContainer
+     */
+    protected $connectionContainer;
+
+    /**
+     * Create and initialize the connector instance
+     */
+    public function __construct()
+    {
+        $this->loadConnectionContainer();
+    }
+
+    /**
+     * Create the ConnectionContainer and add the configuration information to it
+     */
+    protected function loadConnectionContainer()
+    {
+        $this->connectionContainer = new Comb_Connector_SshConnectionContainer();
+        $this->connectionContainer->loadConnectionsFromConfiguration();
+    }
+
+    /**
+     * The connectioncontainer containing the various connections
+     * @return Comb_Connector_SshConnectionContainer
+     */
+    protected function getConnectionContainer()
+    {
+        return $this->connectionContainer;
+    }
+
+    /**
      * Runs the command on the servers belonging to the serverLists provided
      * @param string $command the command to run
      * @param array $serverLists the serverslists where to run the command on
@@ -9,7 +41,6 @@ class Comb_Connector_Ssh implements Comb_ConnectorInterface
     public function execCommand($command, Array $serverLists)
     {
         $servers = $this->getServersForServerLists($serverLists);
-
         $waitFor = array();
 
         foreach($servers as $server) {
@@ -64,12 +95,6 @@ class Comb_Connector_Ssh implements Comb_ConnectorInterface
      */
     protected function getServersForServerLists(Array $serverLists)
     {
-        static $testServers = array();
-        if (empty($testServers)) {
-            $obj = new Comb_Connector_SshConnection('server1', 'user', 'password');
-            $obj2 = new Comb_Connector_SshConnection('server2', 'user', 'password');
-            $testServers = array($obj, $obj2);
-        }
-        return $testServers;
+        return $this->connectionContainer->getConnectionsForConnectionLists($serverLists);
     }
 }

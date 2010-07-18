@@ -30,9 +30,13 @@ class Comb_TaskRunner
     /**
      * Returns an instance for the connector we'll be using.
      * @param string $type the type of connector to use for communication
+     * @return Comb_Connector_Ssh
      */
-    protected function getConnector($type='ssh')
+    protected function getConnector()
     {
-        return Comb_ConnectorFactory::getConnector($type);
+        $connector = new Comb_Connector_Ssh();
+        
+        
+        return $connector;
     }
 }

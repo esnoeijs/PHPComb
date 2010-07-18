@@ -294,7 +294,7 @@ class Comb_Connector_SshConnection
         if (strstr($responseString, '__SUDOPASSWORD__')) {
             Comb_Registry::get('logger')->debug('Sending sudo password to ' . $this->getHostname());
             $password = $this->getPassword();
-            fputs($this->stream, $password, strlen($password));
+            fputs($this->stream, $password . "\n", strlen($password)+1);
             return true;
         }
         return false;

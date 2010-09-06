@@ -2,6 +2,11 @@
 class Comb_TaskRunner
 {
     /**
+     * @var Comb_TaskLog our tasklog
+     */
+    protected $taskLog;
+
+    /**
      * Include and run the task specified
      * @param string $task the task to run
      */
@@ -9,9 +14,15 @@ class Comb_TaskRunner
     {
         $logger = Comb_Registry::get('logger');
         $taskObject = $this->getNewTaskObject($task);
+        $this->addTaskToLog($taskObject);
 
         $logger->info('[task: ' . $task . ']');
-        $taskObject->run();
+
+        try {
+            $taskObject->run();
+        } catch(Comb_TaskExecutionException $e) {
+            $this->rollback();   
+        }
     }
 
     /**
@@ -29,14 +40,49 @@ class Comb_TaskRunner
 
     /**
      * Returns an instance for the connector we'll be using.
-     * @param string $type the type of connector to use for communication
      * @return Comb_Connector_Ssh
      */
     protected function getConnector()
     {
-        $connector = new Comb_Connector_Ssh();
-        
-        
-        return $connector;
+        return new Comb_Connector_Ssh();
+    }
+
+    /**
+     * Add task to our tasklog
+     * @param Comb_BaseTask $task the task to add to our log
+     */
+    protected function addTaskToLog(Comb_BaseTask $task)
+    {
+        $log = $this->getTasklog();
+        $log->addTask($task);
+    }
+
+    /**
+     * Returns our instance of the task log
+     * @return Comb_TaskLog the tasklog
+     */
+    protected function getTasklog()
+    {
+        if (!isset($this->taskLog)) {
+            $this->taskLog = new Comb_TaskLog();
+        }
+        return $this->taskLog;
+    }
+
+    /**
+     * Rollback all tasks we've executed so far
+     */
+    protected function rollback()
+    {
+        $logger = Comb_Registry::get('logger');
+        $logger->warning('Rolling back');
+
+        while($task = $this->taskLog->popTask()) {
+            try {
+                $task->undo();
+            } catch(Comb_TaskExecutionException $task) {
+                $logger->error('Rollback failed: ' . $task->getMessage());
+            }
+        }
     }
 }

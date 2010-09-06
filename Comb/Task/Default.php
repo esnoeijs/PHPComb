@@ -7,6 +7,7 @@ class Comb_Task_Default extends Comb_BaseTask
     {
         $this->sudo('touch myfile2.txt');
         $this->exec('ls -lah myfile2.txt');
+        $this->runTask('Symlink');
     }
 
     public function undo()

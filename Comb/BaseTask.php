@@ -33,6 +33,19 @@ abstract class Comb_BaseTask
     }
 
     /**
+     * Run should be implemented, calling the several tasks and commands
+     * needed to do what we want to do.
+     */
+    abstract public function run();
+
+    /**
+     * Can be implemented, and should undo everything run() does
+     */
+    public function undo()
+    {
+    }
+
+    /**
      * Sets the Comb_ConnectorInterface we should use
      * @param Comb_ConnectorInterface $connector the connector we're using for
      *                                           communication with our servers
@@ -80,22 +93,35 @@ abstract class Comb_BaseTask
     }
 
     /**
+     * Runs a task specified
+     * @param string $taskName the task to execute
+     */
+    public function runTask($taskName)
+    {
+        $taskRunner = Comb_Registry::get('taskrunner');
+        $taskRunner->run($taskName);
+    }
+
+    /**
      * Run the command on our servers
      * @param string $command the command to run on the remote server(s)
-     * @return boolean true if successfull, false if not executed
+     * @return boolean true if successfull, false if something went wrong
      */
-    public function exec($command)
+    protected function exec($command)
     {
         $serverLists = $this->getServerLists();
         if (is_null($serverLists)) {
             return false;
         }
-        Comb_Registry::get('logger')->info("Exec: '$command' [" . implode(', ', $serverLists) . ']');
+        Comb_Registry::get('logger')
+            ->info("Exec: '$command' [" . implode(', ', $serverLists) . ']');
 
         $connector = $this->getConnector();
-        $connector->execCommand($command, $serverLists);
-
-        return true;
+        if ($connector->execCommand($command, $serverLists)) {
+            return true;
+        } else {
+            throw new Comb_TaskExecutionException('Error while running command: ' . $command);
+        }
     }
 
     /**
@@ -103,7 +129,7 @@ abstract class Comb_BaseTask
      * @param string $command the command to run on the remote server(s)
      * @return boolean true if successfull, false if not executed
      */
-    public function sudo($command)
+    protected function sudo($command)
     {
         $command = 'sudo -p __SUDOPASSWORD__ ' . $command;
         return $this->exec($command);
@@ -114,15 +140,15 @@ abstract class Comb_BaseTask
      * serverLists defined. If not, check if our creator has serverLists defined.
      * @return array containing serverlists to use, or null if none were found.
      */
-    public function getServerLists()
+    protected function getServerLists()
     {
         if (isset($this->serverLists) && is_array($this->serverLists)) {
             return $this->serverLists;
         } elseif (true === $this->creatorIsSet()) {
             return $this->getCreator()->getServerLists();
         } else {
-            Comb_Registry::get('logger')->error('No serverlist was set for task ' .
-                    __CLASS__ . '. I don\'t know on which servers to execute this task!');
+            Comb_Registry::get('logger')
+                ->error('No serverlist was set for task ' . __CLASS__ . '.');
             return null;
         }
     }

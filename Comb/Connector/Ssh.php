@@ -8,6 +8,12 @@ class Comb_Connector_Ssh implements Comb_ConnectorInterface
     protected $connectionContainer;
 
     /**
+     * Boolean flag keeping track of wether or not we had any errors while
+     * executing the last command.
+     */
+    protected $lastCommandHadErrors = false;
+
+    /**
      * Create and initialize the connector instance
      */
     public function __construct()
@@ -37,9 +43,12 @@ class Comb_Connector_Ssh implements Comb_ConnectorInterface
      * Runs the command on the servers belonging to the serverLists provided
      * @param string $command the command to run
      * @param array $serverLists the serverslists where to run the command on
+     * @return boolean true when the command executed successfully, false if
+     *                 there has been some kind of error (requiring a rollback)
      */
     public function execCommand($command, Array $serverLists)
     {
+        $this->lastCommandHadErrors = false;
         $servers = $this->getServersForServerLists($serverLists);
         $waitFor = array();
 
@@ -56,10 +65,13 @@ class Comb_Connector_Ssh implements Comb_ConnectorInterface
         while(false === $this->allDone($waitFor)) {
             usleep('100000');
         }
+
+        return (false === $this->lastCommandHadErrors);
     }
 
     /**
-     * Checks all the servers to see if they are done
+     * Asks the connection objects to update their status, and then checks if
+     * all the servers are done executing the command
      * @param array $waitFor the servers to wait for
      * @return boolean true if everything is done and we can continue, false if not
      */
@@ -78,7 +90,7 @@ class Comb_Connector_Ssh implements Comb_ConnectorInterface
             }
 
             if ($requestStatus == Comb_Connector_SshConnection::STATUS_ERROR) {
-                Comb_Registry::get('logger')->notice('To be implemented: rollback');
+                $this->lastCommandHadErrors = true;
                 continue;
             }
         }

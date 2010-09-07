@@ -6,11 +6,31 @@ class Comb_Application
      */
     public function __construct()
     {
+        $this->loadCommandlineParams();
         $this->setupLogger();
         $this->displayApplicationVersion();
         $this->checkDependencies();
         $this->setupProjectConfig();
         $this->setupTaskRunner();
+    }
+
+    /**
+     * Makes sure the commandline parameters are read, checked and stored
+     */
+    protected function loadCommandlineParams()
+    {
+        $commandlineParams = new Comb_CommandlineParams();
+
+        if (!$commandlineParams->loadParams($_SERVER['argv'])) {
+            exit(1);
+        }
+
+        if ($commandlineParams->optionSelected('help')) {
+            echo $commandlineParams->getSyntaxExplain();
+            exit(0);
+        }
+        
+        Comb_Registry::set('commandlineparams', $commandlineParams);
     }
 
     /**
@@ -20,7 +40,9 @@ class Comb_Application
     protected function setupLogger()
     {
         $logger = new Comb_Logger();
-        $logger->setUseColors();
+        if (Comb_Registry::get('commandlineparams')->optionSelected('color')) {
+            $logger->setUseColors();
+        }
         Comb_Registry::set('logger', $logger);
     }
 
@@ -29,8 +51,8 @@ class Comb_Application
      */
     protected function displayApplicationVersion()
     {
-        Comb_Registry::get('logger')->info('PHP Comb - Version ' .
-                COMB_VERSION . ' - http://phpcomb.net/', true);
+        Comb_Registry::get('logger')->info('PHPComb - Version ' .
+                COMB_VERSION . ' - http://phpcomb.net/');
     }
 
     /**

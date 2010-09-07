@@ -57,9 +57,13 @@ class Comb_Connector_Ssh implements Comb_ConnectorInterface
                 Comb_Registry::get('logger')->warning('Skipping server');
                 continue;
             }
-            
-            $server->exec($command);
-            $waitFor[] = $server;
+
+            if (false == Comb_Registry::get('commandlineparams')->optionSelected('dry-run')) {
+                $server->exec($command);
+                $waitFor[] = $server;
+            } else {
+                Comb_Registry::get('logger')->info($server->getHostname() . ' (dry-run)');
+            }
         }
 
         while(false === $this->allDone($waitFor)) {

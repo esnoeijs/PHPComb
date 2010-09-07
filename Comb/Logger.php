@@ -33,8 +33,10 @@ class Comb_Logger
      */
     public function debug($msg)
     {
-        $msg = 'debug > ' . $msg;
-        $this->log($msg, self::LOGLEVEL_DEBUG, "\033[0;36m");
+        if (true == Comb_Registry::get('commandlineparams')->optionSelected('verbose')) {
+            $msg = 'debug > ' . $msg;
+            $this->log($msg, self::LOGLEVEL_DEBUG, "\033[0;36m");
+        }
     }
 
     /**
@@ -44,7 +46,9 @@ class Comb_Logger
      */
     public function info($msg, $bright=false)
     {
-        $this->log($msg, self::LOGLEVEL_INFO, ($bright ? "\033[1;37m" : null));
+        if (false == Comb_Registry::get('commandlineparams')->optionSelected('quiet')) {
+            $this->log($msg, self::LOGLEVEL_INFO, ($bright ? "\033[1;37m" : null));
+        }
     }
 
     /**
@@ -55,8 +59,10 @@ class Comb_Logger
      */
     public function notice($msg)
     {
-        $msg = '[notice] ' . $msg;
-        $this->log($msg, self::LOGLEVEL_NOTICE, "\033[0;33m");
+        if (false == Comb_Registry::get('commandlineparams')->optionSelected('quiet')) {
+            $msg = '[notice] ' . $msg;
+            $this->log($msg, self::LOGLEVEL_NOTICE, "\033[0;33m");
+        }
     }
 
     /**
@@ -66,8 +72,10 @@ class Comb_Logger
      */
     public function warning($msg)
     {
-        $msg = '[WARNING] ' . $msg;
-        $this->log($msg, self::LOGLEVEL_WARNING, "\033[0;35m");
+        if (false == Comb_Registry::get('commandlineparams')->optionSelected('quiet')) {
+            $msg = '[WARNING] ' . $msg;
+            $this->log($msg, self::LOGLEVEL_WARNING, "\033[0;35m");
+        }
     }
 
     /**

@@ -1,6 +1,10 @@
 <?php
 class Comb_CommandlineParams
 {
+    /**
+     * Configuration for all possible options.
+     * @var array
+     */
     protected $possibleOptions = array(
         'color' => array(
             'alias' => 'c',
@@ -24,6 +28,10 @@ class Comb_CommandlineParams
         ),
     );
 
+    /**
+     * Array containing all the options that are enabled
+     * @var array
+     */
     protected $enabledOptions = array();
 
     /**
@@ -60,6 +68,10 @@ class Comb_CommandlineParams
         return true;
     }
 
+    /**
+     * Checks if there are any combinations of parameters that can't exist together
+     * @throws Comb_InvalidCommandlineException when an invalid combination was found
+     */
     protected function checkCombinations()
     {
         if (in_array('verbose', $this->enabledOptions) && in_array('quiet', $this->enabledOptions)) {
@@ -67,6 +79,11 @@ class Comb_CommandlineParams
         }
     }
 
+    /**
+     * Enable the option provided.
+     * @param string $option the option to set. Should be the full name ('verbose', not 'v')
+     * @throws Comb_InvalidCommandlineException when the option is invalid
+     */
     protected function setOptionByFullName($option)
     {
         if (!array_key_exists($option, $this->possibleOptions)) {
@@ -75,6 +92,11 @@ class Comb_CommandlineParams
         $this->enabledOptions[] = $option;
     }
 
+    /**
+     * Sets option by alias
+     * @param string $alias the option alias, 'v' for verbose or 'q' for quiet
+     * @throws Comb_InvalidCommandlineException when the option is invalid
+     */
     protected function setOptionByAlias($alias)
     {
         foreach($this->possibleOptions as $optionName => $optionDetails) {
@@ -86,6 +108,12 @@ class Comb_CommandlineParams
         throw new Comb_InvalidCommandlineException('-' . $alias . ' is not a valid commandline option');
     }
 
+    /**
+     * Checks if the option provided is selected
+     * @param string $optionname the full option (not the alias)
+     * @return boolean true if it's set, false if not
+     * @throws Exception when the option doesn't exist.
+     */
     public function optionSelected($optionname)
     {
         if (!array_key_exists($optionname, $this->possibleOptions)) {
@@ -94,6 +122,11 @@ class Comb_CommandlineParams
         return in_array($optionname, $this->enabledOptions);
     }
 
+    /**
+     * Generates the block of text to display when we want to show the commandline
+     * syntax to the user.
+     * @return string the text to display
+     */
     public function getSyntaxExplain()
     {
         $explain =  "Usage: comb [OPTION...] [TASK]" . PHP_EOL;

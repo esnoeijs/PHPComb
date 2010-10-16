@@ -1,0 +1,12 @@
+<phpunit bootstrap="bootstrap.php" colors="true">
+  <testsuites>
+    <testsuite name="comb">
+      <directory>Comb</directory>
+    </testsuite>
+  </testsuites>
+  <filter>
+    <whitelist addUncoveredFilesFromWhitelist="true">
+      <directory suffix=".php">../Comb</directory>
+    </whitelist>
+  </filter>
+</phpunit>

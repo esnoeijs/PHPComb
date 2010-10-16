@@ -114,7 +114,7 @@ class Comb_CommandlineParams
      * @return boolean true if it's set, false if not
      * @throws Exception when the option doesn't exist.
      */
-    public function optionSelected($optionname)
+public function optionSelected($optionname)
     {
         if (!array_key_exists($optionname, $this->possibleOptions)) {
             throw new Exception('Option ' . $optionname . ' is invalid');

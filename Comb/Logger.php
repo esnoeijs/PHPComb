@@ -15,6 +15,23 @@ class Comb_Logger
     protected $useColors = false;
 
     /**
+     * Object containing the commandline parameters
+     * @var Comb_CommandlineParams
+     */
+    protected $commandlineParams;
+
+    /**
+     * Creates a new instance of the logger
+     * @param Comb_CommandlineParams $params the commandline parameters to use 
+     */
+    public function __construct(Comb_CommandlineParams $params=null)
+    {
+        if (!is_null($params)) {
+            $this->commandlineParams = $params;
+        }
+    }
+
+    /**
      * Write the log message to the right channel
      * @param string $msg the message to display
      * @param int $level the loglevel
@@ -33,7 +50,7 @@ class Comb_Logger
      */
     public function debug($msg)
     {
-        if (true == Comb_Registry::get('commandlineparams')->optionSelected('verbose')) {
+        if (true == $this->getCommandlineParams()->optionSelected('verbose')) {
             $msg = 'debug > ' . $msg;
             $this->log($msg, self::LOGLEVEL_DEBUG, "\033[0;36m");
         }
@@ -46,7 +63,7 @@ class Comb_Logger
      */
     public function info($msg, $bright=false)
     {
-        if (false == Comb_Registry::get('commandlineparams')->optionSelected('quiet')) {
+        if (false == $this->getCommandlineParams()->optionSelected('quiet')) {
             $this->log($msg, self::LOGLEVEL_INFO, ($bright ? "\033[1;37m" : null));
         }
     }
@@ -59,7 +76,7 @@ class Comb_Logger
      */
     public function notice($msg)
     {
-        if (false == Comb_Registry::get('commandlineparams')->optionSelected('quiet')) {
+        if (false == $this->getCommandlineParams()->optionSelected('quiet')) {
             $msg = '[notice] ' . $msg;
             $this->log($msg, self::LOGLEVEL_NOTICE, "\033[0;33m");
         }
@@ -72,7 +89,7 @@ class Comb_Logger
      */
     public function warning($msg)
     {
-        if (false == Comb_Registry::get('commandlineparams')->optionSelected('quiet')) {
+        if (false == $this->getCommandlineParams()->optionSelected('quiet')) {
             $msg = '[WARNING] ' . $msg;
             $this->log($msg, self::LOGLEVEL_WARNING, "\033[0;35m");
         }
@@ -108,5 +125,17 @@ class Comb_Logger
     public function setUseColors($useColors=true)
     {
         $this->useColors = (bool)$useColors;
+    }
+
+    /**
+     * Returns an instance of the commandline parameters
+     * @return Comb_CommandlineParams
+     */
+    protected function getCommandlineParams()
+    {
+        if (!isset($this->commandlineParams)) {
+            $this->commandlineParams = Comb_Registry::get('commandlineparams');
+        }
+        return $this->commandlineParams;
     }
 }

@@ -9,6 +9,7 @@ set_include_path(
 );
 
 include_once(COMB_APPLICATION_ROOT . 'Comb' . DIRECTORY_SEPARATOR . 'Autoloader.php');
+include_once(COMB_APPLICATION_ROOT . 'Comb' . DIRECTORY_SEPARATOR . 'ConnectorInterface.php');
 function __autoload($className)
 {
     return Comb_Autoloader::load($className);

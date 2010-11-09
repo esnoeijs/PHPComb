@@ -1,6 +1,25 @@
 <?php
 class Comb_Autoloader
 {
+    static protected $includePaths = array();
+
+    /**
+     * Adds a path from which the autoloader will attempt to load classes.
+     * Priority gets determined by reverse insertion, so the last path to
+     * be added will be the first to be checked.
+     *
+     * @todo implement different method for prioritizing include paths
+     *
+     * @param String $path
+     */
+    public static function setIncludePaths($path)
+    {
+        if (substr($path, -1) === DIRECTORY_SEPARATOR)
+            array_unshift(self::$includePaths, substr($path, 0, -1));
+        else
+            array_unshift(self::$includePaths, $path);
+    }
+
     /**
      * Autoloader method called. We'll try to include the file based on the classname
      * @param string $className the class we're looking for
@@ -8,16 +27,19 @@ class Comb_Autoloader
      */
     public static function load($className)
     {
-        if (substr($className, 0, 10) == 'Comb_Task_') {
-            return self::loadTask($className);
-        }
-
-        if (substr($className, 0, 5) == 'Comb_') {
-            return self::loadCombClass($className);
+        switch (true)
+        {
+            case (substr($className, 0, 10) == 'Comb_Task_'):
+                return self::loadTask($className);
+                break;
+            case (substr($className, 0, 5) == 'Comb_'):
+                return self::loadCombClass($className);
+                break;
         }
 
         return false;
     }
+
 
     /**
      * Load a 'normal' Comb-class
@@ -26,70 +48,41 @@ class Comb_Autoloader
      */
     protected static function loadCombClass($className)
     {
-        $filepath = COMB_APPLICATION_ROOT . str_replace('_', DIRECTORY_SEPARATOR, $className) . '.php';
-        if (file_exists($filepath)) {
-            require_once($filepath);
-            return true;
+        foreach (self::$includePaths as $path) {
+            $filepath = $path . DIRECTORY_SEPARATOR . str_replace('_', DIRECTORY_SEPARATOR, $className) . '.php';
+            if (file_exists($filepath)) {
+                return (require_once($filepath));
+            }
         }
 
         return false;
     }
 
     /**
-     * Loads the task. We can't rely on the autoloader now, because we want to
-     * search the folders in a very specific way. The method will first look at
-     * the project folder to see if the file is there, then it will check the
-     * application tasks for inclusion. In the future it's probably a good idea to
-     * add a third option in the middle, being a companies central tasks
-     * repository.
+     * Searches for the Task class file to include from the defined include paths.
+     * 
      * @param string $className the classname of the task we're trying to find
      * @return boolean true if we included the task successfull, false if not
      */
     protected static function loadTask($className)
     {
-        $taskName = str_replace('Comb_Task_', '', $className);
-        if (self::loadTaskFromProjectfolder($taskName)) {
-            return true;
-        } elseif(self::loadTaskFromApplicationfolder($taskName)) {
-            return true;
-        } else {
-            return false;
+        $taskName = strtolower(str_replace('Comb_Task_', '', $className));
+
+        foreach (self::$includePaths as $path)
+        {
+            /**
+             * @todo Remove the necessity for this.
+             */
+           foreach (array('Comb','comb') as $combDir)
+           {
+               $filePath = $path . DIRECTORY_SEPARATOR . $combDir . DIRECTORY_SEPARATOR . 'Task'  . DIRECTORY_SEPARATOR . $taskName . '.php';
+               if (file_exists($filePath)) {
+                    Comb_Registry::get('logger')->debug("Loading task $taskName from applicationfolder: $filePath");
+                    return (require_once($filePath));
+               }
+           }
         }
-    }
 
-    /**
-     * Loads the task from the project folder, in the dir comb/{$task}.php
-     * @param string $task the task to include
-     * @return boolean true if succeeded, false if not
-     */
-    protected static function loadTaskFromProjectfolder($task)
-    {
-        $tasksDir = COMB_PROJECT_ROOT . 'comb' . DIRECTORY_SEPARATOR;
-
-        $filePath = $tasksDir . strtolower($task) . '.php';
-        if (file_exists($filePath)) {
-            require_once $filePath;
-            Comb_Registry::get('logger')->debug("Loaded task $task from projectfolder: $filePath");
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Loads the task from the application folder, in the dir Comb/Task/{$task}.php
-     * @param string $task the task to include
-     * @return boolean true if succeeded, false if not
-     */
-    protected function loadTaskFromApplicationfolder($task)
-    {
-        $tasksDir = COMB_APPLICATION_ROOT . 'Comb' . DIRECTORY_SEPARATOR . 'Task' . DIRECTORY_SEPARATOR;
-
-        $filePath = $tasksDir . strtolower($task) . '.php';
-        if (file_exists($filePath)) {
-            require_once $filePath;
-            Comb_Registry::get('logger')->debug("Loaded task $task from applicationfolder: $filePath");
-            return true;
-        }
         return false;
     }
 }

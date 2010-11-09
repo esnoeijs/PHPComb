@@ -24,6 +24,8 @@ function __autoload($className)
 {
     return Comb_Autoloader::load($className);
 }
+Comb_Autoloader::setIncludePaths(COMB_APPLICATION_ROOT);
+Comb_Autoloader::setIncludePaths(COMB_PROJECT_ROOT);
 
 /**
  * Run the application
